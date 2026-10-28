@@ -52,21 +52,21 @@ def show_exam_result(request, course_id, submission_id):
     submission = get_object_or_404(Submission, pk=submission_id)
     
     total_score = 0
-    possible_score = 0
+    possible = 0
     selected_ids = [c.id for c in submission.choices.all()]
     
     for question in course.question_set.all():
-        possible_score += question.grade
+        possible += question.grade
         if question.is_get_score(selected_ids):
             total_score += question.grade
             
-    grade = int((total_score / possible_score) * 100) if possible_score > 0 else 0
+    grade = int((total_score / possible) * 100) if possible > 0 else 0
     
     context['course'] = course
     context['grade'] = grade
     context['choices'] = submission.choices.all()
     context['selected_ids'] = selected_ids
-    context['possible_score'] = possible_score
+    context['possible'] = possible
     context['is_passed'] = grade >= 80
     return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
 
