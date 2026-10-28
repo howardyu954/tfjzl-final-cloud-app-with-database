@@ -8,7 +8,7 @@ urlpatterns = [
     path(route='', view=views.popular_course_list, name='index'),
     path(route='course/<int:course_id>/enroll/', view=views.enroll, name='enroll'),
     path(route='course/<int:course_id>/', view=views.course_details, name='course_details'),
-    path(route='course/<int:course_id>/submission/', view=views.submit, name='submit'),
+    path(route='course/<int:course_id>/submit/', view=views.submit, name='submit'),
     path(route='course/<int:course_id>/submission/<int:submission_id>/result/', view=views.show_exam_result, name='show_exam_result'),
     path(route='registration/', view=views.registration_request, name='registration'),
     path(route='login/', view=views.login_request, name='login'),
