@@ -6,14 +6,12 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.models import User
 from .models import Course, Lesson, Enrollment, Question, Choice, Submission
 
-
 def popular_course_list(request):
     context = {}
     if request.method == 'GET':
         course_list = Course.objects.order_by('-total_enrollment')[:10]
         context['course_list'] = course_list
         return render(request, 'onlinecourse/course_list.html', context)
-
 
 def enroll(request, course_id):
     if request.method == 'POST':
@@ -28,14 +26,12 @@ def enroll(request, course_id):
         else:
             return HttpResponseRedirect(reverse(viewname='onlinecourse:login'))
 
-
 def course_details(request, course_id):
     context = {}
     if request.method == 'GET':
         course = get_object_or_404(Course, pk=course_id)
         context['course'] = course
-        return render(request, 'onlinecourse/course_detail_bootstrap.html', context)
-
+        return render(request, 'onlinecourse/course_details_bootstrap.html', context)
 
 def submit(request, course_id):
     course = get_object_or_404(Course, pk=course_id)
@@ -43,15 +39,12 @@ def submit(request, course_id):
     enrollment = Enrollment.objects.get(user=user, course=course)
     submission = Submission.objects.create(enrollment=enrollment)
     
-    selected_choice_ids = []
     for key, value in request.POST.items():
         if key.startswith('choice_'):
-            selected_choice_ids.append(int(value))
             choice = get_object_or_404(Choice, id=int(value))
             submission.choices.add(choice)
     submission.save()
-    return HttpResponseRedirect(reverse(viewname='onlinecourse:exam_result', args=(course.id, submission.id)))
-
+    return HttpResponseRedirect(reverse('onlinecourse:show_exam_result', args=(course.id, submission.id)))
 
 def show_exam_result(request, course_id, submission_id):
     context = {}
@@ -59,22 +52,23 @@ def show_exam_result(request, course_id, submission_id):
     submission = get_object_or_404(Submission, pk=submission_id)
     
     total_score = 0
-    max_score = 0
+    possible_score = 0
     selected_ids = [c.id for c in submission.choices.all()]
     
     for question in course.question_set.all():
-        max_score += question.grade
+        possible_score += question.grade
         if question.is_get_score(selected_ids):
             total_score += question.grade
             
-    grade = int((total_score / max_score) * 100) if max_score > 0 else 0
+    grade = int((total_score / possible_score) * 100) if possible_score > 0 else 0
     
     context['course'] = course
     context['grade'] = grade
     context['choices'] = submission.choices.all()
+    context['selected_ids'] = selected_ids
+    context['possible_score'] = possible_score
     context['is_passed'] = grade >= 80
     return render(request, 'onlinecourse/exam_result_bootstrap.html', context)
-
 
 def registration_request(request):
     context = {}
@@ -93,7 +87,6 @@ def registration_request(request):
             return redirect('onlinecourse:index')
     return render(request, 'onlinecourse/user_registration_bootstrap.html', context)
 
-
 def login_request(request):
     context = {}
     if request.method == 'POST':
@@ -107,7 +100,6 @@ def login_request(request):
             context['error'] = 'Invalid username or password.'
             return render(request, 'onlinecourse/user_login_bootstrap.html', context)
     return render(request, 'onlinecourse/user_login_bootstrap.html', context)
-
 
 def logout_request(request):
     logout(request)
